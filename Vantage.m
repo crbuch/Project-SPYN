@@ -22,21 +22,70 @@ classdef Vantage
         end
 
         function run(obj)
+            %main loop
+            obj.startMotors();
+            
             while true
-                color_rgb = obj.ev3Brick.ColorRGB(obj.color_sensor_port);
-                red = color_rgb(1);
-                green = color_rgb(2);
-                blue = color_rgb(3);
+
+                if obj.is_at_red_light()
+                    %Stop the motors
+                    obj.stopMotors();
+                    pause(5);
+                    obj.startMotors();
+                    while obj.is_at_red_light()
+                        pause(0.05)
+                    end
+                end
+
+
+
             end
         end
     end
 
     methods(Access = private) %Private methods
-        function checkForWall(obj)
-            currentDist = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port);
+        function startMotors(obj)
+            obj.ev3Brick.MoveMotor(obj.left_motor_port, 50);
+            obj.ev3Brick.MoveMotor(obj.right_motor_port, 50);
+        end
+
+        function stopMotors(obj)
+            obj.ev3Brick.MoveMotor(obj.left_motor_port, 0);
+            obj.ev3Brick.MoveMotor(obj.right_motor_port, 0);
+        end
+
+        function result = did_hit_wall(obj)
+            %change to touch sensor
+            %currentDist = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port);
             if currentDist < obj.distance_threshold
-                obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, 50, obj.turning_degrees, 'Brake');
+                result = true;
+            else
+                result = false;
             end
+        end
+
+        function rotate_left(obj)
+            obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, 50, obj.turning_degrees, 'Brake');
+        end
+
+        function rotate_right(obj)
+            obj.ev3Brick.MoveMotorAngleRel(obj.left_motor_port, 50, obj.turning_degrees, 'Brake');
+        end
+
+        function result = is_at_red_light(obj)
+            [r, g, b] = obj.get_RGB_Colors();
+            if r > 200 && g < 100 && b < 50 
+                result = true;
+            else
+                result = false;
+            end
+        end
+
+        function [red, green, blue] = get_RGB_Colors(obj)
+            color_rgb = obj.ev3Brick.ColorRGB(obj.color_sensor_port);
+            red = color_rgb(1);
+            green = color_rgb(2);
+            blue = color_rgb(3);
         end
     end
 end
