@@ -17,8 +17,9 @@ turning_degrees = 90; %angle in degrees to turn the left motor to make the car t
 
 color_sensor_port = 2; %port that the color sensor is connected to
 
+color_sensor_mode = 4;
 %----------------------------------------------------------------------------------------
 
-car = Vantage(ev3Brick, left_motor_port, right_motor_port, ultrasonic_sensor_port, color_sensor_port, distance_Threshold, turning_degrees);
+car = Vantage(ev3Brick, left_motor_port, right_motor_port, ultrasonic_sensor_port, color_sensor_port, distance_Threshold, turning_degrees, color_sensor_mode);
 
-
+car.run();
