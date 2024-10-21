@@ -9,7 +9,7 @@ classdef Robot
     end
 
     methods(Access = public) %Public methods
-        function obj = Vantage(ev3Brick, left_motor_port, right_motor_port, touch_sensor_port, color_sensor_port, turning_degrees)
+        function obj = Robot(ev3Brick, left_motor_port, right_motor_port, touch_sensor_port, color_sensor_port, turning_degrees)
             ev3Brick.SetColorMode(color_sensor_port, 4);
             obj.ev3Brick = ev3Brick;
             obj.left_motor_port = left_motor_port;
@@ -52,7 +52,7 @@ classdef Robot
                         wall_number = wall_number + 1;
                     elseif obj.is_at_red_light()
                         obj.stop_at_red_light();
-                        %wait 1 second for the robot to pass the red light
+                        %wait 1 second for the robot to pass the red light before rotating
                         pause(1);
                         obj.rotate_left();
                     elseif wall_number == 4
