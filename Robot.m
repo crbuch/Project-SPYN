@@ -1,4 +1,4 @@
-classdef Vantage
+classdef Robot
     properties (Access = private)
         ev3Brick
         left_motor_port %Port that the left motor is connected to
