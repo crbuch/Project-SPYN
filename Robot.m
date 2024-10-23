@@ -54,64 +54,47 @@ classdef Robot
             end
             result = yield_until_complete;
         end
-
-
        
         function move_to_next_wall(obj)
             obj.go_forward_in_cm(obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port)-10);
         end
 
-
         function brake(obj)
-            disp('Braking\n');
             obj.ev3Brick.StopAllMotors('Brake');
         end
 
-        
-
         function rotate_left(obj)
-            disp('Rotating left\n');
             obj.ev3Brick.MoveMotorAngleRel(obj.left_motor_port, obj.motor_speed/2, -obj.turning_degrees/2, 'Brake');
             obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, obj.motor_speed/2, obj.turning_degrees/2, 'Brake');
             obj.ev3Brick.WaitForMotor(obj.left_motor_port);
             obj.ev3Brick.WaitForMotor(obj.right_motor_port);
-            disp('Finished rotating left\n');
         end
 
         function rotate_right(obj)
-            disp('Rotating right\n');
             obj.ev3Brick.MoveMotorAngleRel(obj.left_motor_port, obj.motor_speed/2, obj.turning_degrees/2, 'Brake');
             obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, obj.motor_speed/2, -obj.turning_degrees/2, 'Brake');
             obj.ev3Brick.WaitForMotor(obj.left_motor_port);
             obj.ev3Brick.WaitForMotor(obj.right_motor_port);
-            disp('Finished rotating right\n');
         end
 
         function result = is_on_color(obj, color)
             ncolor = lower(strtrim(color));
+
+            color1 = obj.ev3Brick.ColorCode(obj.color_sensor_port);
+            color2 = obj.ev3Brick.ColorCode(obj.color_sensor_port_2);
+
             if ncolor == "red"
-                result = obj.get_Color() == 5;
+                result = (color1 == 5 || color2 == 5);
             elseif ncolor == "green"
-                result = obj.get_Color() == 3;
+                result = (color1 == 3 || color2 == 3);
             elseif ncolor == "blue"
-                result = obj.get_Color() == 2;
+                result = (color1 == 2 || color2 == 2);
             elseif ncolor == "yellow"
-                result = obj.get_Color() == 4;
+                result = (color1 == 4 || color2 == 4);
             else
                 result = false;
             end
         end
 
-
-        function  result = get_Color(obj)
-            color_1 = obj.ev3Brick.ColorCode(obj.color_sensor_port);
-            color_2 = obj.ev3Brick.ColorCode(obj.color_sensor_port_2);
-            %Both sensors have to sense the same color otherwise this function will return 0
-            if color_1 == color_2
-                result = color_1;
-            else
-                result = 0;
-            end
-        end
     end
 end
