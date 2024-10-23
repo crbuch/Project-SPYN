@@ -12,14 +12,16 @@ classdef Calibrator
             obj.rightMotorPort = rightMotorPort;
         end
 
-        function rotateRight(degrees, speed)
-            obj.ev3Brick.MoveMotorAngleRel(obj.leftMotorPort, speed, degrees, 'Brake');
+        function rotateRight(obj, degrees, speed)
+            obj.ev3Brick.MoveMotorAngleRel(obj.rightMotorPort, speed, degrees, 'Brake');
             obj.ev3Brick.WaitForMotor(obj.leftMotorPort);
+            pause(2);
         end
 
-        function rotateLeft(degrees, speed)
-            obj.ev3Brick.MoveMotorAngleRel(obj.rightMotorPort, speed, degrees, 'Brake');
+        function rotateLeft(obj, degrees, speed)
+            obj.ev3Brick.MoveMotorAngleRel(obj.leftMotorPort, speed, degrees, 'Brake');
             obj.ev3Brick.WaitForMotor(obj.rightMotorPort);
+            pause(2);
         end
     end
 
