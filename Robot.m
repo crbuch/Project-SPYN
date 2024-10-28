@@ -1,8 +1,10 @@
 classdef Robot
-    properties (Access = private)
+    properties (Access = protected)
         ev3Brick
         left_motor_port
         right_motor_port
+        left_touch_sensor_port
+        right_touch_sensor_port
         ultrasonic_sensor_port
         color_sensor_port 
         color_sensor_port_2
@@ -14,9 +16,10 @@ classdef Robot
     methods
         function obj = Robot(ev3Brick)
             obj.ev3Brick = ev3Brick;
-
             obj.left_motor_port = 'D';
             obj.right_motor_port = 'C';
+            obj.left_touch_sensor_port = 4;
+            obj.right_touch_sensor_port = 1;
             obj.ultrasonic_sensor_port = 3;
             obj.color_sensor_port = 1;
             obj.color_sensor_port_2 = 4;
@@ -31,14 +34,56 @@ classdef Robot
 
     methods(Access = protected)
 
+        function clear = path_to_right_is_clear(obj)
+            obj.ev3Brick.MoveMotorAngleRel(obj.left_motor_port, obj.motor_speed/2, obj.turning_degrees/2, 'Brake');
+            obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, obj.motor_speed/2, -obj.turning_degrees/2, 'Brake');
+            obj.yield_motors();
+            
+            clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > 15;  
+
+            obj.ev3Brick.MoveMotorAngleRel(obj.left_motor_port, obj.motor_speed/2, -obj.turning_degrees/2, 'Brake');
+            obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, obj.motor_speed/2, obj.turning_degrees/2, 'Brake');
+            obj.yield_motors();
+        end
+
+        function clear = path_ahead_is_clear(obj)
+            clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > 15;
+        end
+
+        function clear = path_to_left_is_clear(obj)
+            obj.ev3Brick.MoveMotorAngleRel(obj.left_motor_port, obj.motor_speed/2, -obj.turning_degrees/2, 'Brake');
+            obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, obj.motor_speed/2, obj.turning_degrees/2, 'Brake');
+            obj.yield_motors();
+            
+            clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > 15; 
+
+            obj.ev3Brick.MoveMotorAngleRel(obj.left_motor_port, obj.motor_speed/2, obj.turning_degrees/2, 'Brake');
+            obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, obj.motor_speed/2, -obj.turning_degrees/2, 'Brake');
+            obj.yield_motors();
+        end
+
+        function turn_around(obj)
+            obj.ev3Brick.MoveMotorAngleRel(obj.left_motor_port, obj.motor_speed, obj.turning_degrees, 'Brake');
+            obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, obj.motor_speed, -obj.turning_degrees, 'Brake');
+            obj.yield_motors();
+        end
+
+
+
+        function yield_motors(obj)
+            obj.ev3Brick.WaitForMotor(obj.left_motor_port);
+            obj.ev3Brick.WaitForMotor(obj.right_motor_port);
+        end
+
         function stop_at_red_light(obj)
             obj.brake();
             pause(5);
-            yield_fn = obj.go_forward_in_cm(12);
-            yield_fn();
+            obj.go_forward_in_cm(34);
+            obj.ev3Brick.WaitForMotor(obj.left_motor_port);
+            obj.ev3Brick.WaitForMotor(obj.right_motor_port);
         end
 
-        function result = go_forward_in_cm(obj, target_distance)
+        function go_forward_in_cm(obj, target_distance)
             wheel_circumference = pi * obj.wheel_diameter;
             
             rotations_needed = target_distance / wheel_circumference;
@@ -47,12 +92,6 @@ classdef Robot
             obj.ev3Brick.MoveMotorAngleRel(obj.left_motor_port, obj.motor_speed, target_angle, 'Brake');
             obj.ev3Brick.MoveMotorAngleRel(obj.right_motor_port, obj.motor_speed, target_angle, 'Brake');
 
-
-            function yield_until_complete()
-                obj.ev3Brick.WaitForMotor(obj.left_motor_port);
-                obj.ev3Brick.WaitForMotor(obj.right_motor_port);
-            end
-            result = yield_until_complete;
         end
        
         function move_to_next_wall(obj)
