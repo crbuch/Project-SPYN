@@ -4,6 +4,12 @@ end
 disp('EV3 Brick found');
 
 
+
+ev3Brick.MoveMotorAngleRel('B', 50, 90 , 'Brake')
+
+
+
+
 %ev3Brick.StopAllMotors('Brake');
 
 

@@ -9,14 +9,12 @@ classdef Navigator < Robot
     methods(Access = public)
         function run(obj)
             while ~obj.is_on_color("Yellow")
-                if obj.path_to_right_is_clear()
+                if obj.path_ahead_is_clear()
+                    obj.move_to_next_wall();
+                elseif obj.path_to_right_is_clear()
                     obj.rotate_right();
-                    obj.move_to_next_wall();
-                elseif obj.path_ahead_is_clear()
-                    obj.move_to_next_wall();
                 elseif obj.path_to_left_is_clear()
                     obj.rotate_left();
-                    obj.move_to_next_wall();
                 else
                     obj.turn_around();
                 end

@@ -18,9 +18,9 @@ classdef Robot
             obj.ev3Brick = ev3Brick;
             obj.left_motor_port = 'D';
             obj.right_motor_port = 'C';
-            obj.left_touch_sensor_port = 4;
+            obj.left_touch_sensor_port = 3;
             obj.right_touch_sensor_port = 1;
-            obj.ultrasonic_sensor_port = 3;
+            obj.ultrasonic_sensor_port = 4;
             obj.color_sensor_port = 1;
             obj.color_sensor_port_2 = 4;
             obj.motor_speed = 50;
@@ -134,6 +134,5 @@ classdef Robot
                 result = false;
             end
         end
-
     end
 end
