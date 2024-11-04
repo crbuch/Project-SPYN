@@ -4,11 +4,16 @@ classdef Robot
         left_motor_port
         right_motor_port
         ultrasonic_sensor_port
+        ultrasonic_pan_motor_port
+        gyro_sensor_port
         color_sensor_port
         motor_speed
         turning_degrees
         wheel_diameter
-        wall_distance_margin
+        wall_distance_margin_straight
+        wall_distance_margin_right
+        wall_distance_margin_left
+
     end
 
     methods
@@ -17,13 +22,18 @@ classdef Robot
             obj.left_motor_port = 'D';
             obj.right_motor_port = 'C';
             obj.ultrasonic_sensor_port = 4;
-            obj.color_sensor_port = 1;
-            obj.motor_speed = 50;
+            obj.gyro_sensor_port = 1;
+            obj.ultrasonic_pan_motor_port = 'B';
+            obj.color_sensor_port = 3;
+            obj.motor_speed = 15;
             obj.turning_degrees = 395;
             obj.wheel_diameter = 5.6;
-            obj.wall_distance_margin = 10;
+            obj.wall_distance_margin_straight = 21 + 3;
+            obj.wall_distance_margin_right = 5 + 3;
+            obj.wall_distance_margin_left = 16 + 3;
 
             obj.ev3Brick.SetColorMode(obj.color_sensor_port, 2);
+            obj.ev3Brick.GyroCalibrate(1);
         end
     end
 
@@ -35,28 +45,42 @@ classdef Robot
             end
             angle = abs(angle);
             %args are nos, speed, ramp_up, constant, ramp_down, braketype
-            obj.ev3Brick.motorStepSpeed(port, speed,  angle*(1/5), angle*(3/5), angle*(1/5), 1);
+            obj.ev3Brick.motorStepSpeed(port, speed,  0, angle, 0, 1);
+        end
+
+        function result = get_gyro_angle(obj)
+            result = obj.ev3Brick.GyroAngle(obj.gyro_sensor_port);
+        end
+
+        function lookRight(obj)
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 115 , 'Brake')
+            obj.wait_for_motors();
+        end
+
+        function lookLeft(obj)
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, -75 , 'Brake')
+            obj.wait_for_motors();
+        end
+
+        function lookAhead(obj)
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 20 , 'Brake')
+            obj.wait_for_motors();
         end
 
 
         function clear = path_to_right_is_clear(obj)
-            obj.rotate_right();
-            obj.wait_for_motors();
-            clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > obj.wall_distance_margin;
-            obj.rotate_left();
-            obj.wait_for_motors();
+            obj.lookRight();
+            clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > obj.wall_distance_margin_right;
         end
 
         function clear = path_ahead_is_clear(obj)
-            clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > obj.wall_distance_margin;
+            obj.lookAhead();
+            clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > obj.wall_distance_margin_straight;
         end
 
         function clear = path_to_left_is_clear(obj)
-            obj.rotate_left();
-            obj.wait_for_motors();
-            clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > obj.wall_distance_margin;
-            obj.rotate_right();
-            obj.wait_for_motors();
+            obj.lookLeft()
+            clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > obj.wall_distance_margin_left;
         end
 
         function turn_around(obj)
@@ -81,15 +105,27 @@ classdef Robot
             wheel_circumference = pi * obj.wheel_diameter;
             rotations_needed = target_distance / wheel_circumference;
             target_angle = rotations_needed * 360;
+            %correction on the left motor to prevent it from veering left
             obj.rotate_motor(obj.left_motor_port, obj.motor_speed, target_angle);
             obj.rotate_motor(obj.right_motor_port, obj.motor_speed, target_angle);
         end
 
 
         function move_to_next_wall(obj)
-            obj.go_forward_in_cm(obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin);
+            obj.lookAhead();
+            obj.go_forward_in_cm(obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_straight);
         end
 
+
+        function result = get_left_distance(obj)
+            obj.lookLeft();
+            result = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_left;
+        end
+
+        function result = get_right_distance(obj)
+            obj.lookRight();
+            result = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_right;
+        end
 
         function brake(obj)
             obj.ev3Brick.StopAllMotors('Brake');

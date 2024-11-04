@@ -5,9 +5,17 @@ disp('EV3 Brick found');
 
 
 
-ev3Brick.MoveMotorAngleRel('B', 50, 90 , 'Brake')
+ev3Brick.GyroCalibrate(1);
+while true
+    pause(0.25);
+    disp(ev3Brick.GyroAngle(1));
+
+end
 
 
+
+
+%straight: 0deg, right: 90deg or -270, left: -90deg, or 270deg, backwards: -180
 
 
 %ev3Brick.StopAllMotors('Brake');
