@@ -28,9 +28,9 @@ classdef Robot
             obj.motor_speed = 15;
             obj.turning_degrees = 395;
             obj.wheel_diameter = 5.6;
-            obj.wall_distance_margin_straight = 21 + 5;
-            obj.wall_distance_margin_right = 5 + 5;
-            obj.wall_distance_margin_left = 16 + 5;
+            obj.wall_distance_margin_straight = 21 + 4;
+            obj.wall_distance_margin_right = 5 + 4;
+            obj.wall_distance_margin_left = 16 + 4;
 
             obj.ev3Brick.SetColorMode(obj.color_sensor_port, 2);
             obj.ev3Brick.GyroCalibrate(1);
