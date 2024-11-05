@@ -48,8 +48,38 @@ classdef Robot
             obj.ev3Brick.motorStepSpeed(port, speed,  0, angle, 0, 1);
         end
 
-        function result = get_gyro_angle(obj)
-            result = obj.ev3Brick.GyroAngle(obj.gyro_sensor_port);
+
+
+        function angle = get_rotation(obj)
+            angle = obj.ev3Brick.GyroAngle(obj.gyro_sensor_port);
+            angle = mod(angle, 360);
+            if angle < 0
+                angle = angle + 360;
+            end
+        end
+
+        function snap_robot_to_angle(obj)
+            disp('Snapping robot to angle\n');
+            currentAngle = obj.get_rotation();
+            targets = [0, 90, 180, 270, 360];
+            [~, idx] = min(abs(targets - currentAngle));
+
+            targetAngle = targets(idx);
+
+            while targetAngle-obj.get_rotation() > 2
+                %rotate right by 1 step
+                obj.rotate_motor(obj.left_motor_port, 50, 1);
+                obj.rotate_motor(obj.right_motor_port, 50, -1);
+                obj.wait_for_motors();
+            end
+
+            while obj.get_rotation()-targetAngle > 2
+                %rotate left by 1 step
+                obj.rotate_motor(obj.left_motor_port, 50, -1);
+                obj.rotate_motor(obj.right_motor_port, 50, 1);
+                obj.wait_for_motors();
+            end
+            disp('Finished snapping robot to angle\n');
         end
 
         function lookRight(obj)
@@ -83,23 +113,12 @@ classdef Robot
             clear = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > obj.wall_distance_margin_left;
         end
 
-        function turn_around(obj)
-            obj.rotate_motor(obj.left_motor_port, obj.motor_speed, obj.turning_degrees);
-            obj.rotate_motor(obj.right_motor_port, obj.motor_speed, -obj.turning_degrees);
-            obj.wait_for_motors();
-        end
 
         function wait_for_motors(obj)
             obj.ev3Brick.WaitForMotor(obj.left_motor_port);
             obj.ev3Brick.WaitForMotor(obj.right_motor_port);
         end
 
-        function stop_at_red_light(obj)
-            obj.brake();
-            pause(5);
-            obj.go_forward_in_cm(34);
-            obj.wait_for_motors();
-        end
 
         function go_forward_in_cm(obj, target_distance)
             wheel_circumference = pi * obj.wheel_diameter;
@@ -111,9 +130,20 @@ classdef Robot
         end
 
 
+        % function move_to_next_wall(obj)
+        %     obj.lookAhead();
+        %     obj.go_forward_in_cm(obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_straight);
+        % end
+
+        
         function move_to_next_wall(obj)
             obj.lookAhead();
-            obj.go_forward_in_cm(obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_straight);
+            while obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) > obj.wall_distance_margin_straight
+                %move 5 steps
+                obj.rotate_motor(obj.left_motor_port, obj.motor_speed, 5);
+                obj.rotate_motor(obj.right_motor_port, obj.motor_speed, 5);
+                obj.wait_for_motors();
+            end
         end
 
 
@@ -127,8 +157,17 @@ classdef Robot
             result = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_right;
         end
 
+
         function brake(obj)
             obj.ev3Brick.StopAllMotors('Brake');
+        end
+
+
+        function closestAngle = get_closet_90_angle(obj)
+            currentAngle = obj.get_rotation();
+            targets = [0, 90, 180, 270, 360];
+            [~, idx] = min(abs(targets - currentAngle));
+            closestAngle = targets(idx);
         end
 
 
@@ -136,6 +175,7 @@ classdef Robot
             obj.rotate_motor(obj.left_motor_port, obj.motor_speed/2, -obj.turning_degrees/2);
             obj.rotate_motor(obj.right_motor_port, obj.motor_speed/2, obj.turning_degrees/2);
             obj.wait_for_motors();
+            obj.snap_robot_to_angle();
         end
 
 
@@ -143,6 +183,14 @@ classdef Robot
             obj.rotate_motor(obj.left_motor_port, obj.motor_speed/2, obj.turning_degrees/2);
             obj.rotate_motor(obj.right_motor_port, obj.motor_speed/2, -obj.turning_degrees/2);
             obj.wait_for_motors();
+            obj.snap_robot_to_angle();
+        end
+
+        function turn_around(obj)
+            obj.rotate_motor(obj.left_motor_port, obj.motor_speed, obj.turning_degrees);
+            obj.rotate_motor(obj.right_motor_port, obj.motor_speed, -obj.turning_degrees);
+            obj.wait_for_motors();
+            obj.snap_robot_to_angle();
         end
 
 

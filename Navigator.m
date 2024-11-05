@@ -13,32 +13,12 @@ classdef Navigator < Robot
 
 
     methods(Access = public)
-        function angle = correct_angle(obj, gyroAngle)
-            angle = mod(gyroAngle, 360);
-            if angle < 0
-                angle = angle + 360;
-            end
-        end
+        
 
 
 
         function run(obj)
             while true
-
-                
-                % while mod(obj.get_gyro_angle(), 90) < 2 || mod(obj.get_gyro_angle(), 90) > 2
-                %     if mod(obj.get_gyro_angle(), 90) < 0
-                %         obj.rotate_motor(obj.left_motor_port, obj.motor_speed, 1)
-                %         obj.rotate_motor(obj.right_motor_port, obj.motor_speed, -1)
-                %     elseif mod(obj.get_gyro_angle(), 90) > 0
-                %         obj.rotate_motor(obj.left_motor_port, obj.motor_speed, -1)
-                %         obj.rotate_motor(obj.right_motor_port, obj.motor_speed, 1)
-                %     else
-                %         break
-                %     end
-                % end
-
-
                 obj.path_left_clear = false;
                 obj.path_right_clear = false;
 
