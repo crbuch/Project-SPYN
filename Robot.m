@@ -13,7 +13,6 @@ classdef Robot
         wall_distance_margin_straight
         wall_distance_margin_right
         wall_distance_margin_left
-
     end
 
     methods
@@ -25,7 +24,7 @@ classdef Robot
             obj.gyro_sensor_port = 1;
             obj.ultrasonic_pan_motor_port = 'B';
             obj.color_sensor_port = 3;
-            obj.motor_speed = 15;
+            obj.motor_speed = 35;
             obj.turning_degrees = 395;
             obj.wheel_diameter = 5.6;
             obj.wall_distance_margin_straight = 21 + 4;
@@ -65,19 +64,23 @@ classdef Robot
 
             targetAngle = targets(idx);
 
-            while targetAngle-obj.get_rotation() > 1
+            obj.brake();
+            obj.rotate_motor(obj.left_motor_port, 4, 360);
+            obj.rotate_motor(obj.right_motor_port, 4, -360);
+            while targetAngle-obj.get_rotation() > 1 && obj.are_motors_busy()
                 %rotate right by 1 step
-                obj.rotate_motor(obj.left_motor_port, 50, 1);
-                obj.rotate_motor(obj.right_motor_port, 50, -1);
-                obj.wait_for_motors();
+                pause(0.0005)
             end
+            obj.brake();
+            pause(0.25);
+            obj.rotate_motor(obj.left_motor_port, 4, -360);
+            obj.rotate_motor(obj.right_motor_port, 4, 360);
 
-            while obj.get_rotation()-targetAngle > 1
+            while obj.get_rotation()-targetAngle > 1 && obj.are_motors_busy()
                 %rotate left by 1 step
-                obj.rotate_motor(obj.left_motor_port, 50, -1);
-                obj.rotate_motor(obj.right_motor_port, 50, 1);
-                obj.wait_for_motors();
+                pause(0.0005)
             end
+            obj.brake();
             disp('Finished snapping robot to angle\n');
         end
 
@@ -120,21 +123,22 @@ classdef Robot
 
 
         function result = are_motors_busy(obj)
-            result = obj.ev3Brick.MotorBusy(obj.ev3Brick.left_motor_port) == 1 || obj.ev3Brick.MotorBusy(obj.ev3Brick.right_motor_port) == 1 ;
+            result = obj.ev3Brick.MotorBusy(obj.left_motor_port) == 1 || obj.ev3Brick.MotorBusy(obj.right_motor_port) == 1 ;
+        end
+
+        function move_in_cm(obj, target_distance)
+            wheel_circumference = pi * obj.wheel_diameter;
+            rotations_needed = target_distance / wheel_circumference;
+            target_angle = rotations_needed * 360;
+            obj.rotate_motor(obj.left_motor_port, obj.motor_speed, target_angle);
+            obj.rotate_motor(obj.right_motor_port, obj.motor_speed, target_angle);
         end
 
 
         function move_to_next_wall(obj)
             obj.lookAhead();
-            target_distance = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_straight;
-            wheel_circumference = pi * obj.wheel_diameter;
-            rotations_needed = target_distance / wheel_circumference;
-            target_angle = rotations_needed * 360;
-            %correction on the left motor to prevent it from veering left
-            obj.rotate_motor(obj.left_motor_port, obj.motor_speed, target_angle);
-            obj.rotate_motor(obj.right_motor_port, obj.motor_speed, target_angle);
+            obj.move_in_cm(obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_straight);
         end
-
 
         function result = get_left_distance(obj)
             obj.lookLeft();
@@ -146,6 +150,9 @@ classdef Robot
             result = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_right;
         end
 
+        function wait_for_distance_reading(obj)
+            obj.ev3Brick.WaitForMotor(obj.ultrasonic_pan_motor_port);
+        end
 
         function brake(obj)
             obj.ev3Brick.StopAllMotors('Brake');
