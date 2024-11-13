@@ -143,7 +143,7 @@ classdef Robot
 
         function move_to_next_wall(obj)
             obj.lookAhead();
-            obj.move_in_cm(obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_straight);
+            obj.move_in_cm(obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - (obj.wall_distance_margin_straight-2));
         end
 
         function result = get_left_distance(obj)
