@@ -101,6 +101,11 @@ classdef Robot
             obj.wait_for_motors();
         end
 
+        function lookBehind(obj)
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, -170)
+            obj.wait_for_motors();
+        end
+
 
         function clear = path_to_right_is_clear(obj)
             obj.lookRight();
@@ -152,6 +157,11 @@ classdef Robot
             result = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port) - obj.wall_distance_margin_right;
         end
 
+        function result = get_behind_distance(obj)
+            obj.lookBehind();
+            result = obj.ev3Brick.UltrasonicDist(obj.ultrasonic_sensor_port);
+        end
+
         function wait_for_distance_reading(obj)
             obj.ev3Brick.WaitForMotor(obj.ultrasonic_pan_motor_port);
         end
@@ -196,7 +206,7 @@ classdef Robot
             elseif ncolor == "blue"
                 result = color1 == 2;
             elseif ncolor == "yellow"
-                result = color1;
+                result = color1 == 4;
             else
                 result = false;
             end

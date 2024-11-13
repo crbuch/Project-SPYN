@@ -4,7 +4,7 @@ end
 disp('EV3 Brick found');
 
 
-
+%car.color_test();
 
 
 car = Navigator(ev3Brick);

@@ -59,12 +59,40 @@ classdef Navigator < Robot
 
 
     methods(Access = public)
-        function run(obj)
-            while true
-                
-            %In the main loop of the program, add a 15 sec interval counter to check if the robot is clear behind it, and if so, move 
-            %20cm backwards, and then straighten out. This will help get it unstuck.
 
+        function color_test(obj)
+            while true 
+                pause(0.5);
+                if obj.is_on_color("Red")
+                    disp("Red");
+                elseif obj.is_on_color("Yellow")
+                    disp("Yellow")
+                elseif obj.is_on_color("Green")
+                    disp("Green")
+                elseif obj.is_on_color("Blue")
+                    disp("Blue")
+                else
+                    disp("No color")
+                end
+            end
+            
+
+
+        end
+
+
+
+        function run(obj)
+            step_number = 0;
+            while true
+                step_number = step_number + 1;
+
+                if mod(step_number, 15) == 0
+                    if obj.get_behind_distance() > 22
+                        obj.move_in_cm(-20);
+                    end
+                end
+                
 
                 obj.path_left_clear = false;
                 obj.path_right_clear = false;
@@ -78,7 +106,7 @@ classdef Navigator < Robot
                         obj.check_for_colors();
 
                         %every 2 seconds, look left & right
-                        if toc > 1
+                        if toc > 2
                             tic;
                           
                             if obj.get_left_distance() < obj.wall_distance_margin_left
