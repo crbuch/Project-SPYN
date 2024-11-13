@@ -59,7 +59,6 @@ classdef Navigator < Robot
 
 
     methods(Access = public)
-
         function color_test(obj)
             while true 
                 pause(0.5);
@@ -75,21 +74,19 @@ classdef Navigator < Robot
                     disp("No color")
                 end
             end
-            
-
-
         end
 
 
 
         function run(obj)
-            step_number = 0;
+            tic;
             while true
-                step_number = step_number + 1;
-
-                if mod(step_number, 15) == 0
+                %every 15 seconds, reverse 20 cm in case robot is stuck in wall
+                if toc > 15
+                    tic;
                     if obj.get_behind_distance() > 22
                         obj.move_in_cm(-20);
+                        obj.snap_robot_to_angle();
                     end
                 end
                 
@@ -102,32 +99,7 @@ classdef Navigator < Robot
 
                     tic;
                     while obj.are_motors_busy()
-
                         obj.check_for_colors();
-
-                        %every 2 seconds, look left & right
-                        if toc > 2
-                            tic;
-                          
-                            if obj.get_left_distance() < obj.wall_distance_margin_left
-                                %if the robot is too close to the left wall, turn a little right
-                                obj.brake();
-                                obj.rotate_motor(obj.left_motor_port, obj.motor_speed, 30);
-                                obj.rotate_motor(obj.right_motor_port, obj.motor_speed, -30);
-                                obj.wait_for_motors();
-                            end
-
-
-                            if obj.get_right_distance() < obj.wall_distance_margin_right
-                                obj.brake();
-                                obj.rotate_motor(obj.right_motor_port, obj.motor_speed, 45);
-                                obj.rotate_motor(obj.left_motor_port, obj.motor_speed, -30);
-                                obj.rotate_motor(obj.right_motor_port, obj.motor_speed, 30);
-                                obj.wait_for_motors();
-                            end
-
-                        end
-
                     end
 
                     continue;

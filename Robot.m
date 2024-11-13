@@ -83,7 +83,6 @@ classdef Robot
                 end
                 obj.brake();
             end
-            disp('Finished snapping robot to angle\n');
         end
 
         function lookRight(obj)
