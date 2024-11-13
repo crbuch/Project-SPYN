@@ -97,7 +97,6 @@ classdef Navigator < Robot
                 if obj.path_ahead_is_clear()
                     obj.move_to_next_wall();
 
-                    tic;
                     while obj.are_motors_busy()
                         obj.check_for_colors();
                     end
