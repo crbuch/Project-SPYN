@@ -8,7 +8,6 @@ classdef Navigator < Robot
         saw_yellow
     end
 
-
     methods
         function obj = Navigator(ev3Brick)
             obj@Robot(ev3Brick);
@@ -19,78 +18,88 @@ classdef Navigator < Robot
         end
     end
 
+    methods(Access = private)
+        function check_for_colors(obj)
+            if obj.is_on_color("red")
+                disp('Red\n')
+                obj.brake();
+                pause(3);
+                obj.move_in_cm(20);
+                obj.wait_for_motors();
+            elseif ~obj.saw_blue && obj.is_on_color("blue")
+                disp('Blue\n')
+                obj.saw_blue = true;
+                obj.brake();
+                obj.ev3Brick.beep();
+                pause(0.5);
+                obj.ev3Brick.beep();
+            elseif ~obj.saw_green && obj.is_on_color("green")
+                disp('Green\n')
+                obj.saw_green = true;
+                obj.brake();
+                obj.ev3Brick.beep();
+                pause(0.5);
+                obj.ev3Brick.beep();
+                pause(0.5);
+                obj.ev3Brick.beep();
+            elseif ~obj.saw_yellow && obj.is_on_color("yellow")
+                disp('Yellow\n')
+                obj.saw_yellow = true;
+                obj.brake();
+                obj.ev3Brick.beep();
+                pause(0.5);
+                obj.ev3Brick.beep();
+                pause(0.5);
+                obj.ev3Brick.beep();
+                pause(0.5);
+                obj.ev3Brick.beep();
+            end
+        end
+    end
+
 
     methods(Access = public)
         function run(obj)
             while true
+                
+            %In the main loop of the program, add a 15 sec interval counter to check if the robot is clear behind it, and if so, move 
+            %20cm backwards, and then straighten out. This will help get it unstuck.
+
+
                 obj.path_left_clear = false;
                 obj.path_right_clear = false;
 
                 if obj.path_ahead_is_clear()
                     obj.move_to_next_wall();
 
-                    iteration = 1;
-                    check_every = 2; %how often (in seconds) the robot should check left & right
+                    tic;
                     while obj.are_motors_busy()
 
-                        if obj.is_on_color("red")
-                            disp('Red\n')
-                            obj.brake();
-                            pause(3);
-                            obj.move_in_cm(20);
-                            obj.wait_for_motors();
-                        elseif ~obj.saw_blue && obj.is_on_color("blue")
-                            disp('Blue\n')
-                            obj.saw_blue = true;
-                            obj.brake();
-                            obj.ev3Brick.beep();
-                            pause(0.5);
-                            obj.ev3Brick.beep();
-                        elseif ~obj.saw_green && obj.is_on_color("green")
-                            disp('Green\n')
-                            obj.saw_green = true;
-                            obj.brake();
-                            obj.ev3Brick.beep();
-                            pause(0.5);
-                            obj.ev3Brick.beep();
-                            pause(0.5);
-                            obj.ev3Brick.beep();
-
-                        elseif ~obj.saw_yellow && obj.is_on_color("yellow")
-                            disp('Yellow\n')
-                            obj.saw_yellow = true;
-                            obj.brake();
-                            obj.ev3Brick.beep();
-                            pause(0.5);
-                            obj.ev3Brick.beep();
-                            pause(0.5);
-                            obj.ev3Brick.beep();
-                            pause(0.5);
-                            obj.ev3Brick.beep();
-                        end
-
+                        obj.check_for_colors();
 
                         %every 2 seconds, look left & right
-                        if mod(iteration, check_every/0.125) == 0
+                        if toc > 1
+                            tic;
                           
-                            if obj.get_left_distance() < obj.wall_distance_margin_left-5
+                            if obj.get_left_distance() < obj.wall_distance_margin_left
                                 %if the robot is too close to the left wall, turn a little right
                                 obj.brake();
-                                obj.rotate_motor(obj.left_motor_port, 50, 45);
-                                pause(1);
+                                obj.rotate_motor(obj.left_motor_port, obj.motor_speed, 30);
+                                obj.rotate_motor(obj.right_motor_port, obj.motor_speed, -30);
+                                obj.wait_for_motors();
                             end
 
-                            pause(0.5);
 
-                            if obj.get_right_distance() < obj.wall_distance_margin_right-5
+                            if obj.get_right_distance() < obj.wall_distance_margin_right
                                 obj.brake();
-                                obj.rotate_motor(obj.right_motor_port, 50, 45);
-                                pause(1);
+                                obj.rotate_motor(obj.right_motor_port, obj.motor_speed, 45);
+                                obj.rotate_motor(obj.left_motor_port, obj.motor_speed, -30);
+                                obj.rotate_motor(obj.right_motor_port, obj.motor_speed, 30);
+                                obj.wait_for_motors();
                             end
 
                         end
 
-                        iteration = iteration + 1;
                     end
 
                     continue;

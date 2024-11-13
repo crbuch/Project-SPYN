@@ -57,45 +57,47 @@ classdef Robot
         end
 
         function snap_robot_to_angle(obj)
+            obj.brake();
             disp('Snapping robot to angle\n');
             currentAngle = obj.get_rotation();
             targets = [0, 90, 180, 270, 360];
             [~, idx] = min(abs(targets - currentAngle));
-
             targetAngle = targets(idx);
-
-            obj.brake();
-            obj.rotate_motor(obj.left_motor_port, 4, 360);
-            obj.rotate_motor(obj.right_motor_port, 4, -360);
-            while targetAngle-obj.get_rotation() > 1 && obj.are_motors_busy()
-                %rotate right by 1 step
-                pause(0.0005)
+            clockwiseDiff = mod(targetAngle - currentAngle, 360);
+            counterclockwiseDiff = mod(currentAngle - targetAngle, 360);
+            % Determine the shortest direction
+            if clockwiseDiff <= counterclockwiseDiff
+                obj.rotate_motor(obj.left_motor_port, 4, 360);
+                obj.rotate_motor(obj.right_motor_port, 4, -360);
+                while targetAngle-obj.get_rotation() > 1 && obj.are_motors_busy()
+                    %rotate right by 1 step
+                    pause(0.0001);
+                end
+                obj.brake();
+            else
+                obj.rotate_motor(obj.left_motor_port, 4, -360);
+                obj.rotate_motor(obj.right_motor_port, 4, 360);
+                while obj.get_rotation()-targetAngle > 1 && obj.are_motors_busy()
+                    %rotate left by 1 step
+                    pause(0.0001);
+                end
+                obj.brake();
             end
-            obj.brake();
-            pause(0.25);
-            obj.rotate_motor(obj.left_motor_port, 4, -360);
-            obj.rotate_motor(obj.right_motor_port, 4, 360);
-
-            while obj.get_rotation()-targetAngle > 1 && obj.are_motors_busy()
-                %rotate left by 1 step
-                pause(0.0005)
-            end
-            obj.brake();
             disp('Finished snapping robot to angle\n');
         end
 
         function lookRight(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 115 , 'Brake')
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 115 , 'Brake');
             obj.wait_for_motors();
         end
 
         function lookLeft(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, -75 , 'Brake')
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, -75 , 'Brake');
             obj.wait_for_motors();
         end
 
         function lookAhead(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 20 , 'Brake')
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 20 , 'Brake');
             obj.wait_for_motors();
         end
 
