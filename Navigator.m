@@ -6,11 +6,15 @@ classdef Navigator < Robot
         saw_blue
         saw_green
         saw_yellow
+
+        joystick_controller
     end
 
     methods
         function obj = Navigator(ev3Brick)
             obj@Robot(ev3Brick);
+
+            obj.joystick_controller = Joystick(obj);
             
             obj.saw_blue = false;
             obj.saw_green = false;
@@ -77,10 +81,9 @@ classdef Navigator < Robot
         end
 
 
-
         function run(obj)
             tic;
-            while true
+            while ~obj.joystick_controller.is_enabled
                 %every 15 seconds, reverse 20 cm in case robot is stuck in wall
                 if toc > 15
                     tic;

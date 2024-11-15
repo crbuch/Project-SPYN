@@ -13,17 +13,21 @@ classdef Robot
         wall_distance_margin_straight
         wall_distance_margin_right
         wall_distance_margin_left
+        wheelchair_lift_motor_port
     end
 
     methods
         function obj = Robot(ev3Brick)
             obj.ev3Brick = ev3Brick;
+
+            obj.wheelchair_lift_motor_port = 'A';
             obj.left_motor_port = 'D';
             obj.right_motor_port = 'C';
+            obj.ultrasonic_pan_motor_port = 'B';
             obj.ultrasonic_sensor_port = 4;
             obj.gyro_sensor_port = 1;
-            obj.ultrasonic_pan_motor_port = 'B';
             obj.color_sensor_port = 3;
+
             obj.motor_speed = 35;
             obj.turning_degrees = 395;
             obj.wheel_diameter = 5.6;
@@ -34,9 +38,7 @@ classdef Robot
             obj.ev3Brick.SetColorMode(obj.color_sensor_port, 2);
             obj.ev3Brick.GyroCalibrate(1);
         end
-    end
-
-    methods(Access = protected)
+ 
         function rotate_motor(obj, port, speed, angle)
             %rotates a motor with smaller ramp up and ramp down values
             if(angle<0)
