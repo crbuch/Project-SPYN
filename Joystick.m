@@ -24,7 +24,6 @@ classdef Joystick < handle
             left_power = max(30 * lr + 30, 0)*ud;
             right_power = max(-30 * lr + 30, 0)*ud;
 
-
             obj.navigator.ev3Brick.MoveMotor(obj.navigator.left_motor_port, left_power);
             obj.navigator.ev3Brick.MoveMotor(obj.navigator.right_motor_port, right_power);
                
@@ -45,9 +44,9 @@ classdef Joystick < handle
                 end
             elseif strcmp(name, 'ControlStateChange')
                 obj.is_enabled = event.HTMLEventData;
-                if ~obj.is_enabled
+                if ~obj.is_enabled && ~obj.navigator.is_running
                     %if joystick was disabled, re enable self driving
-                    %obj.changeMotorStates(0, 0, 0)
+                    obj.navigator.ev3Brick.StopAllMotors();
                     obj.navigator.run()
                 end
             end

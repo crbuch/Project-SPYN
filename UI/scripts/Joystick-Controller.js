@@ -71,7 +71,7 @@ function setup(htmlComp) {
 }
 
 setInterval(function(){
-  if(htmlComponent!==undefined){
+  if(htmlComponent!==undefined && checkbox.checked){
     htmlComponent.sendEventToMATLAB("DataChange", [lr, ud, lift]);
   }
 }, 250)

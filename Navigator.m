@@ -10,6 +10,10 @@ classdef Navigator < handle & Robot
         joystick_controller
     end
 
+    properties(Access=public)
+        is_running
+    end
+
     methods
         function obj = Navigator(ev3Brick)
             obj@Robot(ev3Brick);
@@ -17,6 +21,7 @@ classdef Navigator < handle & Robot
             %you must pass self (navigator instance) into the joystick
             %controller
             obj.joystick_controller = Joystick(obj);
+            obj.is_running = false;
             
             obj.saw_blue = false;
             obj.saw_green = false;
@@ -86,11 +91,8 @@ classdef Navigator < handle & Robot
         function run(obj)
             tic;
             while ~obj.joystick_controller.is_enabled
-                disp(obj.joystick_controller.is_enabled)
-                if obj.joystick_controller.is_enabled
-                    disp("Breaking");
-                    break;
-                end
+                obj.is_running = true;
+
                 %every 15 seconds, reverse 20 cm in case robot is stuck in wall
                 if toc > 15
                     tic;
@@ -148,6 +150,7 @@ classdef Navigator < handle & Robot
                     obj.turn_around();
                 end
             end
+            obj.is_running = false;
         end
     end
 end
