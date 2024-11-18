@@ -1,4 +1,4 @@
-classdef Navigator < Robot
+classdef Navigator < handle & Robot
     properties (Access=private)
         path_left_clear
         path_right_clear
@@ -13,7 +13,9 @@ classdef Navigator < Robot
     methods
         function obj = Navigator(ev3Brick)
             obj@Robot(ev3Brick);
-
+            
+            %you must pass self (navigator instance) into the joystick
+            %controller
             obj.joystick_controller = Joystick(obj);
             
             obj.saw_blue = false;
@@ -84,6 +86,7 @@ classdef Navigator < Robot
         function run(obj)
             tic;
             while ~obj.joystick_controller.is_enabled
+                disp("Starting auto-nav");
                 %every 15 seconds, reverse 20 cm in case robot is stuck in wall
                 if toc > 15
                     tic;

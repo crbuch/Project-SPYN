@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Robot Controls</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+
+  <body>
+    <div id="heading-container">
+      <p><b>Controls enabled:</b></p>
+      <label class="switch">
+        <input type="checkbox" id="controlsCheckbox" checked />
+        <span class="slider round"></span>
+      </label>
+    </div>
+
+    <div id="controls-container">
+      <div id="joystick-container">
+        <div id="arrow-left" class="arrow">&lt;</div>
+        <div id="arrow-right" class="arrow">&gt;</div>
+        <div id="arrow-up" class="arrow">&lt;</div>
+        <div id="arrow-down" class="arrow">&gt;</div>
+        <div id="joystick"></div>
+      </div>
+
+      <div id="slider-container">
+        <div id="slider"></div>
+      </div>
+    </div>
+
+    <script src="./scripts/Joystick-Controller.js"></script>
+  </body>
+</html>

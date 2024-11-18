@@ -1,14 +1,10 @@
-joystick = Joystick(0);
-
-
-% if ~exist('ev3Brick', 'var')
-%     ev3Brick = ConnectBrick('BRCK1');
-% end
-% disp('EV3 Brick found');
+%if ~exist('ev3Brick', 'var')
+%   ev3Brick = ConnectBrick('BRCK1');
+%end
+%disp('EV3 Brick found');
 
 
 % %car.color_test();
+ev3Brick = MockBrick();
 
-
-% car = Navigator(ev3Brick);
-% car.run();
+car = Navigator(ev3Brick);

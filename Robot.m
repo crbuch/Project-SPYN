@@ -1,4 +1,4 @@
-classdef Robot
+classdef Robot < handle
     properties (Access = protected)
         ev3Brick
         left_motor_port
