@@ -50,7 +50,6 @@ function moveJoystick(event) {
   lr = Math.min(Math.max(horizontal.toFixed(2), -1), 1);
   ud = Math.min(Math.max(vertical.toFixed(2) * -1, -1), 1);
 
-  send_to_matlab();
 }
 
 function startJoystickDrag(event) {
@@ -65,16 +64,18 @@ function stopJoystickDrag() {
 
   lr = 0;
   ud = 0;
-  send_to_matlab();
 }
 
 function setup(htmlComp) {
   htmlComponent = htmlComp;
 }
 
-function send_to_matlab() {
-  htmlComponent.sendEventToMATLAB("DataChange", [lr, ud, lift]);
-}
+setInterval(function(){
+  if(htmlComponent!==undefined){
+    htmlComponent.sendEventToMATLAB("DataChange", [lr, ud, lift]);
+  }
+}, 250)
+
 
 function moveSlider(event) {
   if (isDraggingSlider) {
@@ -102,7 +103,6 @@ function moveSlider(event) {
 
     const liftValue = newTop / (containerRect.height - slider.offsetHeight);
     lift = -2 * liftValue.toFixed(2) + 1;
-    send_to_matlab();
   }
 }
 
@@ -126,7 +126,6 @@ function stopSliderDrag() {
   slider.style.top = `${(containerRect.height - slider.offsetHeight) / 2}px`;
 
   lift = 0;
-  send_to_matlab();
 }
 
 joystickContainer.addEventListener("mousedown", startJoystickDrag);

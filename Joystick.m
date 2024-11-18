@@ -21,27 +21,33 @@ classdef Joystick < handle
 
 
         function changeMotorStates(obj, lr, ud, lift)
-            left_power = max(40 * lr + 40, 0)*ud;
-            right_power = max(-40 * lr + 40, 0)*ud;
+            left_power = max(30 * lr + 30, 0)*ud;
+            right_power = max(-30 * lr + 30, 0)*ud;
 
-            lift_power = lift * 10;
 
             obj.navigator.ev3Brick.MoveMotor(obj.navigator.left_motor_port, left_power);
             obj.navigator.ev3Brick.MoveMotor(obj.navigator.right_motor_port, right_power);
-            obj.navigator.ev3Brick.MoveMotor(obj.navigator.wheelchair_lift_motor_port, lift_power);
+               
+            angle = 1;
+            if lift > 0
+                angle = -1;
+            end
+               
+            obj.navigator.rotate_motor(obj.navigator.wheelchair_lift_motor_port, abs(lift*5), angle*360)
         end
 
         function eventRecieved(obj, ~, event)
             name = event.HTMLEventName;
             if strcmp(name,'DataChange')
-                eventData = event.HTMLEventData;
-                obj.changeMotorStates(eventData(1), eventData(2), eventData(3));
-
+                if obj.is_enabled
+                    eventData = event.HTMLEventData;
+                    obj.changeMotorStates(eventData(1), eventData(2), eventData(3));    
+                end
             elseif strcmp(name, 'ControlStateChange')
                 obj.is_enabled = event.HTMLEventData;
                 if ~obj.is_enabled
                     %if joystick was disabled, re enable self driving
-                    obj.changeMotorStates(0, 0, 0)
+                    %obj.changeMotorStates(0, 0, 0)
                     obj.navigator.run()
                 end
             end

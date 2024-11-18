@@ -1,5 +1,5 @@
 classdef Robot < handle
-    properties (Access = protected)
+    properties (Access = public)
         ev3Brick
         left_motor_port
         right_motor_port
@@ -88,17 +88,17 @@ classdef Robot < handle
         end
 
         function lookRight(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 115 , 'Brake');
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 115+30 , 'Brake');
             obj.wait_for_motors();
         end
 
         function lookLeft(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, -75 , 'Brake');
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, -75+30 , 'Brake');
             obj.wait_for_motors();
         end
 
         function lookAhead(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 20 , 'Brake');
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 20+30 , 'Brake');
             obj.wait_for_motors();
         end
 

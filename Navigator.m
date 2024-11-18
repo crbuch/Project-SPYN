@@ -86,7 +86,11 @@ classdef Navigator < handle & Robot
         function run(obj)
             tic;
             while ~obj.joystick_controller.is_enabled
-                disp("Starting auto-nav");
+                disp(obj.joystick_controller.is_enabled)
+                if obj.joystick_controller.is_enabled
+                    disp("Breaking");
+                    break;
+                end
                 %every 15 seconds, reverse 20 cm in case robot is stuck in wall
                 if toc > 15
                     tic;
