@@ -1,0 +1,26 @@
+{
+  "Motor_Ports": {
+    "Left": "D",
+    "Right": "C",
+    "Lift": "A",
+    "Radar": "B"
+  },
+
+  "Sensor_Ports": {
+    "Ultrasonic": 4,
+    "Gyro": 1,
+    "Color": 3
+  },
+
+  "Padding_Distance": {
+    "Front": 25,
+    "Right": 10,
+    "Left": 20
+  },
+
+  "Nav_Config": {
+    "Speed": 25,
+    "Steps_Per_Turn": 395,
+    "Wheel_Diameter": 5.6
+  }
+}
