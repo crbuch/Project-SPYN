@@ -18,7 +18,7 @@ classdef Navigator < handle & Robot
         function obj = Navigator(ev3Brick)
             obj@Robot(ev3Brick);
             
-            %you must pass self (navigator instance) into the joystick
+            %pass self (navigator instance) into the joystick
             %controller
             obj.joystick_controller = Joystick(obj);
             obj.is_running = false;
@@ -71,7 +71,7 @@ classdef Navigator < handle & Robot
 
     methods(Access = public)
         function color_test(obj)
-            while true 
+            while true
                 pause(0.5);
                 if obj.is_on_color("Red")
                     disp("Red");
@@ -91,6 +91,7 @@ classdef Navigator < handle & Robot
         function run(obj)
             tic;
             while ~obj.joystick_controller.is_enabled
+                pause(0.025);
                 obj.is_running = true;
 
                 %every 15 seconds, reverse 20 cm in case robot is stuck in wall
@@ -110,6 +111,7 @@ classdef Navigator < handle & Robot
                     obj.move_to_next_wall();
 
                     while obj.are_motors_busy()
+                        pause(0.025);
                         obj.check_for_colors();
                     end
 

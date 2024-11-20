@@ -91,12 +91,14 @@ classdef MockBrick < handle
         end
         
         function reading = UltrasonicDist(brick, SensorPort)
+            reading = 50;
         end
         
         function GyroCalibrate(brick, SensorPort)
         end
         
         function reading = GyroAngle(brick, SensorPort)
+            reading = 90;
         end
         
         function reading = GyroRate(brick, SensorPort)
@@ -127,7 +129,7 @@ classdef MockBrick < handle
         end
         
         function state = MotorBusy(brick,nos)
-            
+            state = false;
         end
         
         function motorStepSpeed(brick,nos,speed,step1,step2,step3,brake)

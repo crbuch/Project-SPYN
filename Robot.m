@@ -28,7 +28,7 @@ classdef Robot < handle
             obj.gyro_sensor_port = 1;
             obj.color_sensor_port = 3;
 
-            obj.motor_speed = 35;
+            obj.motor_speed = 25;
             obj.turning_degrees = 395;
             obj.wheel_diameter = 5.6;
             obj.wall_distance_margin_straight = 21 + 4;
@@ -69,41 +69,41 @@ classdef Robot < handle
             counterclockwiseDiff = mod(currentAngle - targetAngle, 360);
             % Determine the shortest direction
             if clockwiseDiff <= counterclockwiseDiff
-                obj.rotate_motor(obj.left_motor_port, 4, 360);
-                obj.rotate_motor(obj.right_motor_port, 4, -360);
+                obj.rotate_motor(obj.left_motor_port, 3, 360);
+                obj.rotate_motor(obj.right_motor_port, 3, -360);
                 while targetAngle-obj.get_rotation() > 1 && obj.are_motors_busy()
                     %rotate right by 1 step
-                    pause(0.0001);
+                    pause(0.025);
                 end
                 obj.brake();
             else
-                obj.rotate_motor(obj.left_motor_port, 4, -360);
-                obj.rotate_motor(obj.right_motor_port, 4, 360);
+                obj.rotate_motor(obj.left_motor_port, 3, -360);
+                obj.rotate_motor(obj.right_motor_port, 3, 360);
                 while obj.get_rotation()-targetAngle > 1 && obj.are_motors_busy()
                     %rotate left by 1 step
-                    pause(0.0001);
+                    pause(0.025);
                 end
                 obj.brake();
             end
         end
 
         function lookRight(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 115+30 , 'Brake');
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 100, 110 , 'Brake');
             obj.wait_for_motors();
         end
 
         function lookLeft(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, -75+30 , 'Brake');
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 100, -75 , 'Brake');
             obj.wait_for_motors();
         end
 
         function lookAhead(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, 20+30 , 'Brake');
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 100, 17 , 'Brake');
             obj.wait_for_motors();
         end
 
         function lookBehind(obj)
-            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 50, -170)
+            obj.ev3Brick.MoveMotorAngleAbs(obj.ultrasonic_pan_motor_port, 100, -165)
             obj.wait_for_motors();
         end
 

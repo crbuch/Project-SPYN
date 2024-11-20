@@ -21,18 +21,22 @@ classdef Joystick < handle
 
 
         function changeMotorStates(obj, lr, ud, lift)
-            left_power = max(30 * lr + 30, 0)*ud;
-            right_power = max(-30 * lr + 30, 0)*ud;
+            left_power = max(30 * lr+30, 0)*ud;
+            right_power = max(-30 * lr+30, 0)*ud;
+            magnitude = sqrt(left_power*left_power + right_power*right_power);
+            magnitude_lr_ud = sqrt(lr*lr+ud*ud);
+            left_unit = left_power/magnitude;
+            right_unit = right_power/magnitude;
 
-            obj.navigator.ev3Brick.MoveMotor(obj.navigator.left_motor_port, left_power);
-            obj.navigator.ev3Brick.MoveMotor(obj.navigator.right_motor_port, right_power);
-               
-            angle = 1;
+            obj.navigator.ev3Brick.MoveMotor(obj.navigator.left_motor_port, left_unit*30*magnitude_lr_ud);
+            obj.navigator.ev3Brick.MoveMotor(obj.navigator.right_motor_port, right_unit*30*magnitude_lr_ud);
+            
+            angle = -1;
             if lift > 0
-                angle = -1;
+                angle = 1;
             end
-               
-            obj.navigator.rotate_motor(obj.navigator.wheelchair_lift_motor_port, abs(lift*5), angle*360)
+
+            obj.navigator.rotate_motor(obj.navigator.wheelchair_lift_motor_port, abs(lift*5), angle*360);
         end
 
         function eventRecieved(obj, ~, event)
@@ -47,7 +51,7 @@ classdef Joystick < handle
                 if ~obj.is_enabled && ~obj.navigator.is_running
                     %if joystick was disabled, re enable self driving
                     obj.navigator.ev3Brick.StopAllMotors();
-                    obj.navigator.run()
+                    obj.navigator.run();
                 end
             end
         end
