@@ -74,7 +74,7 @@ setInterval(function(){
   if(htmlComponent!==undefined && checkbox.checked){
     htmlComponent.sendEventToMATLAB("DataChange", [lr, ud, lift]);
   }
-}, 250)
+}, 200)
 
 
 function moveSlider(event) {

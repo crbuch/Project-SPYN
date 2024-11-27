@@ -9,7 +9,7 @@ classdef Robot < handle
             self.ev3Brick = ev3Brick;
             self.config = jsondecode(fileread(config_file_path));
             self.ev3Brick.SetColorMode(self.config.Sensor_Ports.Color, 2);
-            self.ev3Brick.GyroCalibrate(1);
+            self.ev3Brick.GyroCalibrate(self.config.Sensor_Ports.Gyro);
         end
  
         function rotate_motor(self, port, speed, angle)
@@ -99,6 +99,7 @@ classdef Robot < handle
         function wait_for_motors(self)
             self.ev3Brick.WaitForMotor(char(self.config.Motor_Ports.Left));
             self.ev3Brick.WaitForMotor(char(self.config.Motor_Ports.Right));
+            self.ev3Brick.WaitForMotor(char(self.config.Motor_Ports.Radar));
         end
 
 
