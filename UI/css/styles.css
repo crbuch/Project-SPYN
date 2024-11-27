@@ -5,10 +5,6 @@ body {
   text-align: center;
 }
 
-p {
-  font-size: 20px;
-}
-
 #controls-container {
   display: flex;
   justify-content: center;
@@ -153,4 +149,26 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+
+.animated-button {
+  background-color: #818181; /* Default color */
+  border: 5px solid #383838;
+  color: white;             /* Text color */
+  border-radius: 5px;      /* Rounded corners */
+  padding: 10px 20px;       /* Padding */
+  font-size: 16px;          /* Font size */
+  cursor: pointer;
+  transition: background-color 0.2s ease; /* Smooth color transition */
+  margin-top:25px;
+  margin-bottom: 25px;
+}
+
+.animated-button:hover {
+  background-color: #5d5d5d; /* Slightly darker blue on hover */
+}
+
+.animated-button:active {
+  background-color: #bebebe; /* Even darker blue on press */
 }

@@ -1,7 +1,6 @@
 const joystickContainer = document.getElementById("joystick-container");
 const joystick = document.getElementById("joystick");
 const slider = document.getElementById("slider");
-const checkbox = document.getElementById("controlsCheckbox");
 
 const joystickRadius = joystickContainer.offsetWidth / 2;
 const joystickMaxMovement = joystickRadius - joystick.offsetWidth / 2;
@@ -71,7 +70,7 @@ function setup(htmlComp) {
 }
 
 setInterval(function(){
-  if(htmlComponent!==undefined && checkbox.checked){
+  if(htmlComponent!==undefined){
     htmlComponent.sendEventToMATLAB("DataChange", [lr, ud, lift]);
   }
 }, 200)
@@ -156,6 +155,9 @@ slider.addEventListener("touchstart", startSliderDrag);
 document.addEventListener("mouseup", stopSliderDrag);
 document.addEventListener("touchend", stopSliderDrag);
 
-checkbox.addEventListener("change", function () {
-  htmlComponent.sendEventToMATLAB("ControlStateChange", this.checked);
-});
+
+document.getElementById("startDrivingBtn").onclick = function(){
+  htmlComponent.sendEventToMATLAB("ControlStateChange", true);
+}
+
+

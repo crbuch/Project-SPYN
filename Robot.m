@@ -2,16 +2,52 @@ classdef Robot < handle
     properties (Access = public)
         ev3Brick
         config
+        pid_values
+    end
+
+    properties (Access= private)
+        startTick
+        angular_offset
     end
 
     methods
         function self = Robot(ev3Brick, config_file_path)
             self.ev3Brick = ev3Brick;
             self.config = jsondecode(fileread(config_file_path));
+
             self.ev3Brick.SetColorMode(self.config.Sensor_Ports.Color, 2);
             self.ev3Brick.GyroCalibrate(self.config.Sensor_Ports.Gyro);
+
+            self.angular_offset = 0;
+            self.startTick = tic;
+            self.pid_values = struct();
+
+            self.resetPID();
         end
- 
+
+        function elapsedTime = tick(self)
+            elapsedTime = toc(self.startTick);
+        end
+
+        function resetPID(self)
+            self.pid_values.wall_output = 0;
+            self.pid_values.prev_wall_error = 0;
+            self.pid_values.wall_integral = 0;
+            self.pid_values.prev_angular_error = 0;
+            self.pid_values.angular_integral = 0;
+
+            self.pid_values.wall_kP=5;
+            self.pid_values.wall_kI=0;
+            self.pid_values.wall_kD=0;
+
+            self.pid_values.angular_kP=1;
+            self.pid_values.angular_kI=0;
+            self.pid_values.angular_kD=0;
+            self.pid_values.wall_previous_tick = self.tick();
+            self.pid_values.angular_previous_tick = self.tick();
+        end
+
+
         function rotate_motor(self, port, speed, angle)
             %rotates a motor with smaller ramp up and ramp down values
             if(angle<0)
@@ -24,11 +60,44 @@ classdef Robot < handle
 
 
         function angle = get_rotation(self)
-            angle = self.ev3Brick.GyroAngle(self.config.Sensor_Ports.Gyro);
+            angle = self.ev3Brick.GyroAngle(self.config.Sensor_Ports.Gyro) - self.angular_offset;
             angle = mod(angle, 360);
             if angle < 0
                 angle = angle + 360;
             end
+        end
+
+
+        function output = pid_control(self, desired_distance, actual_distance)
+            dt = self.tick() - self.pid_values.wall_previous_tick;
+            err = desired_distance - actual_distance;
+            P = self.pid_values.wall_kP * err;
+            self.pid_values.wall_integral = self.pid_values.wall_integral + (err * dt);
+            I = self.pid_values.wall_kI * self.pid_values.wall_integral;
+            derivative = (err - self.pid_values.prev_wall_error) / dt;
+            D = self.pid_values.wall_kD * derivative;
+            output = P + I + D;
+            self.pid_values.prev_wall_error = err;
+            self.pid_values.wall_previous_tick = self.tick();
+        end
+
+        function output = angular_pid_control(self, target_angle, current_angle)
+            dt = self.tick() - self.pid_values.angular_previous_tick;
+            err = target_angle - current_angle;
+            if err > 180
+                err = err - 360;
+            elseif err < -180
+                err = err + 360;
+            end
+            self.pid_values.angular_integral = self.pid_values.angular_integral + err * dt;
+            derivative = (err - self.pid_values.prev_angular_error) / dt;
+            output = self.pid_values.angular_kP * err + self.pid_values.angular_kI * self.pid_values.angular_integral + self.pid_values.angular_kD * derivative;
+        end
+
+        function move_forward_towards_angle(self, target_speed, target_angle)
+            output = selfangular_pid_control(target_angle, self.get_rotation());
+            self.ev3Brick.MoveMotor(char(self.config.Motor_Ports.Left), target_speed + output)
+            self.ev3Brick.MoveMotor(char(self.config.Motor_Ports.Right), target_speed - output)
         end
 
         function snap_robot_to_angle(self)
@@ -59,43 +128,6 @@ classdef Robot < handle
             end
         end
 
-        function lookRight(self)
-            self.ev3Brick.MoveMotorAngleAbs(char(self.config.Motor_Ports.Radar), 100, 110 , 'Brake');
-            self.wait_for_motors();
-        end
-
-        function lookLeft(self)
-            self.ev3Brick.MoveMotorAngleAbs(char(self.config.Motor_Ports.Radar), 100, -75 , 'Brake');
-            self.wait_for_motors();
-        end
-
-        function lookAhead(self)
-            self.ev3Brick.MoveMotorAngleAbs(char(self.config.Motor_Ports.Radar), 100, 17 , 'Brake');
-            self.wait_for_motors();
-        end
-
-        function lookBehind(self)
-            self.ev3Brick.MoveMotorAngleAbs(char(self.config.Motor_Ports.Radar), 100, -165)
-            self.wait_for_motors();
-        end
-
-
-        function clear = path_to_right_is_clear(self)
-            self.lookRight();
-            clear = self.ev3Brick.UltrasonicDist(self.config.Sensor_Ports.Ultrasonic) > self.config.Padding_Distance.Right;
-        end
-
-        function clear = path_ahead_is_clear(self)
-            self.lookAhead();
-            clear = self.ev3Brick.UltrasonicDist(self.config.Sensor_Ports.Ultrasonic) > self.config.Padding_Distance.Front;
-        end
-
-        function clear = path_to_left_is_clear(self)
-            self.lookLeft()
-            clear = self.ev3Brick.UltrasonicDist(self.config.Sensor_Ports.Ultrasonic) > self.config.Padding_Distance.Left;
-        end
-
-
         function wait_for_motors(self)
             self.ev3Brick.WaitForMotor(char(self.config.Motor_Ports.Left));
             self.ev3Brick.WaitForMotor(char(self.config.Motor_Ports.Right));
@@ -107,6 +139,29 @@ classdef Robot < handle
             result = self.ev3Brick.MotorBusy(char(self.config.Motor_Ports.Left)) == 1 || self.ev3Brick.MotorBusy(char(self.config.Motor_Ports.Right)) == 1 ;
         end
 
+        function distance = get_left_distance(self, absolute)
+            if absolute==true
+                self.ev3Brick.MoveMotorAngleAbs(self.config.Motor_Ports.Radar, 100, -90-self.get_rotation());
+            else
+                self.ev3Brick.MoveMotorAngleAbs(self.config.Motor_Ports.Radar, 100, -90)
+            end
+            self.ev3Brick.WaitForMotor(char(self.config.Motor_Ports.Radar));
+            distance = self.ev3Brick.UltrasonicDist(self.config.Sensor_Ports.Ultrasonic);
+        end
+
+        function distance = get_ahead_distance(self, absolute)
+            if absolute==true
+                self.ev3Brick.MoveMotorAngleAbs(self.config.Motor_Ports.Radar, 100, 0-self.get_rotation());
+            else
+                self.ev3Brick.MoveMotorAngleAbs(self.config.Motor_Ports.Radar, 100, 0);
+            end
+            self.ev3Brick.WaitForMotor(self.config.Motor_Ports.Radar);
+            distance = self.ev3Brick.UltrasonicDist(self.config.Sensor_Ports.Ultrasonic);
+        end
+
+        function brake(self)
+            self.ev3Brick.StopAllMotors('Brake');
+        end
 
         function move_in_cm(self, target_distance)
             wheel_circumference = pi * self.config.Nav_Config.Wheel_Diameter;
@@ -114,60 +169,21 @@ classdef Robot < handle
             target_angle = rotations_needed * 360;
             self.rotate_motor(char(self.config.Motor_Ports.Left), self.config.Nav_Config.Speed, target_angle);
             self.rotate_motor(char(self.config.Motor_Ports.Right), self.config.Nav_Config.Speed, target_angle);
-        end
-
-
-        function move_to_next_wall(self)
-            self.lookAhead();
-            self.move_in_cm(self.ev3Brick.UltrasonicDist(self.config.Sensor_Ports.Ultrasonic) - (self.config.Padding_Distance.Front-2));
-        end
-
-        function result = get_left_distance(self)
-            self.lookLeft();
-            result = self.ev3Brick.UltrasonicDist(self.config.Sensor_Ports.Ultrasonic) - self.config.Padding_Distance.Left;
-        end
-
-        function result = get_right_distance(self)
-            self.lookRight();
-            result = self.ev3Brick.UltrasonicDist(self.config.Sensor_Ports.Ultrasonic) - self.config.Padding_Distance.Right;
-        end
-
-        function result = get_behind_distance(self)
-            self.lookBehind();
-            result = self.ev3Brick.UltrasonicDist(self.config.Sensor_Ports.Ultrasonic);
-        end
-
-        function wait_for_distance_reading(self)
-            self.ev3Brick.WaitForMotor(char(self.config.Motor_Ports.Radar));
-        end
-
-        function brake(self)
-            self.ev3Brick.StopAllMotors('Brake');
-        end
-
-
-        function rotate_left(self)
-            self.rotate_motor(char(self.config.Motor_Ports.Left), self.config.Nav_Config.Speed/2, -self.config.Nav_Config.Steps_Per_Turn/2);
-            self.rotate_motor(char(self.config.Motor_Ports.Right), self.config.Nav_Config.Speed/2, self.config.Nav_Config.Steps_Per_Turn/2);
             self.wait_for_motors();
-            self.snap_robot_to_angle();
         end
 
 
-        function rotate_right(self)
-            self.rotate_motor(char(self.config.Motor_Ports.Left), self.config.Nav_Config.Speed/2, self.config.Nav_Config.Steps_Per_Turn/2);
-            self.rotate_motor(char(self.config.Motor_Ports.Right), self.config.Nav_Config.Speed/2, -self.config.Nav_Config.Steps_Per_Turn/2);
+        function pivot_left_90(self)
+            self.rotate_motor(self.config.Motor_Ports.Right, self.config.Nav_Config.Speed, 430);
             self.wait_for_motors();
-            self.snap_robot_to_angle();
+            self.angular_offset = self.angular_offset - 90;
         end
 
-        function turn_around(self)
-            self.rotate_motor(char(self.config.Motor_Ports.Left), self.config.Nav_Config.Speed, self.config.Nav_Config.Steps_Per_Turn);
-            self.rotate_motor(char(self.config.Motor_Ports.Right), self.config.Nav_Config.Speed, -self.config.Nav_Config.Steps_Per_Turn);
-            self.wait_for_motors();
-            self.snap_robot_to_angle();
+        function pivot_right_90(self)
+            self.rotate_motor(self.config.Motor_Ports.Left, self.config.Nav_Config.Speed, 430);
+            self.wait_for_motors()
+            self.angular_offset = self.angular_offset + 90;
         end
-
 
         function result = is_on_color(self, color)
             ncolor = lower(strtrim(color));
