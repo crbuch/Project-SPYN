@@ -12,12 +12,15 @@
     "Color": 3
   },
 
+  "Padding_Distance": {
+    "Front": 25,
+    "Right": 10,
+    "Left": 20
+  },
 
   "Nav_Config": {
-    "Speed": 20,
-    "Distance_From_Wall":14,
-    "Distance_Cutoff_Threshold":30,
-    "Wheel_Diameter": 5.6,
-    "Pause_Time_Between_Steps":0.5
+    "Speed": 25,
+    "Steps_Per_Turn": 395,
+    "Wheel_Diameter": 5.6
   }
 }

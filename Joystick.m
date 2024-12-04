@@ -6,15 +6,15 @@ classdef Joystick < handle
     end
 
     properties(Access=public)
-        self_driving_enabled
+        is_enabled
     end
 
     methods
         function self = Joystick(navigator)
-            self.self_driving_enabled = false;
+            self.is_enabled = true;
             self.navigator = navigator;
-            self.fig = uifigure('Name', 'Robot Controls', 'Position', [0 0 500 350]);
-            self.htmlContent = uihtml(self.fig, 'Position', [0 0 500 350]);
+            self.fig = uifigure('Name', 'Robot Controls', 'Position', [0 0 500 320]);
+            self.htmlContent = uihtml(self.fig, 'Position', [0 0 500 320]);
             self.htmlContent.HTMLSource = './UI/Joystick.html';
             self.htmlContent.HTMLEventReceivedFcn = @self.eventRecieved;
         end
@@ -40,12 +40,15 @@ classdef Joystick < handle
         function eventRecieved(self, ~, event)
             name = event.HTMLEventName;
             if strcmp(name,'DataChange')
-                if self.self_driving_enabled
+                if self.is_enabled
                     eventData = event.HTMLEventData;
                     self.changeMotorStates(eventData(1), eventData(2), eventData(3));    
                 end
             elseif strcmp(name, 'ControlStateChange')
-                self.self_driving_enabled = true;
+                self.is_enabled = event.HTMLEventData;
+                if ~self.is_enabled 
+                    self.changeMotorStates(0, 0, 0);    
+                end
             end
         end
     end

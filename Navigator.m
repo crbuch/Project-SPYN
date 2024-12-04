@@ -11,92 +11,118 @@ classdef Navigator < handle & Robot
     methods
         function self = Navigator(ev3Brick, config_file_path)
             self@Robot(ev3Brick, config_file_path);
-
+            
+            %pass self (navigator instance) into the joystick
+            %controller
             self.joystick_controller = Joystick(self);
+            
+            self.saw_blue = false;
+            self.saw_green = false;
+            self.saw_yellow = false;
         end
     end
 
     methods(Access = public)
-
-        function actual_dist = left_Tracked_Forward_Update(self, base_speed, desired_dist, distance_cutoff_threshold) % returns the current distance
-            actual_dist = self.get_left_distance(true);
-            if actual_dist <= distance_cutoff_threshold
-                wall_output = self.pid_control(desired_dist, actual_dist);
-                self.move_forward_towards_angle(base_speed, wall_output)
-            end
-        end
-
-        function find_Wall_Behind(self)
-            self.rotate_motor(self.config.Motor_Ports.Left, 10, -360);
-            self.rotate_motor(self.config.Motor_Ports.Right, 10, -360);
-            while self.get_left_distance(false) > self.config.Nav_Config.Distance_Cutoff_Threshold && self.are_motors_busy()
-                pause(1/40);
-            end
-            self.brake();
-        end
-
-
-
         function run(self)
-            step_number = 0;
-            pause_time = self.config.Nav_Config.Pause_Time_Between_Steps;
             while true
-                while ~self.joystick_controller.self_driving_enabled
-                    pause(1/40);
+                pause(0.025);
+
+                while self.joystick_controller.is_enabled
+                    %yield script until joystick controller is disabled
+                    pause(0.025);
                 end
 
-                step_number = step_number + 1;
 
-                if mod(step_number, 6)==0
-                    forward_dist = self.get_ahead_distance(true);
-                    if forward_dist < self.config.Nav_Config.Distance_Cutoff_Threshold
-                        self.brake()
-                        pause(pause_time);
-                        self.snap_robot_to_angle()
-                        pause(pause_time);
+                path_left_clear = false;
+                path_right_clear = false;
 
-                        self.move_in_cm((self.config.Nav_Config.Distance_From_Wall*2)-forward_dist);
+                if self.path_ahead_is_clear()
+                    self.move_to_next_wall();
 
-                        pause(pause_time);
-                        self.pivot_right_90()
-                        pause(pause_time);
-                        self.resetPID();
+                    while self.are_motors_busy()
+                        pause(0.025);
+                        self.check_for_colors();
                     end
+
+                    continue;
                 end
 
-                wall_dist = self.left_Tracked_Forward_Update(self.config.Nav_Config.Speed, self.config.Nav_Config.Distance_From_Wall, self.config.Nav_Config.Distance_Cutoff_Threshold);
+                if self.path_to_right_is_clear()
+                    path_right_clear = true;
+                end
 
+                if self.path_to_left_is_clear()
+                    path_left_clear = true;
+                end
 
-                if wall_dist >= self.config.Nav_Config.Distance_Cutoff_Threshold
-                    self.brake()
-                    pause(pause_time);
-                    self.snap_robot_to_angle()
-                    pause(pause_time);
-                    self.find_Wall_Behind()
-                    pause(pause_time);
-                    self.move_in_cm(self.config.Nav_Config.Distance_From_Wall)
-                    pause(pause_time);
-                    self.pivot_left_90()
-                    pause(pause_time);
-                    self.move_in_cm(self.config.Nav_Config.Distance_From_Wall*2)
-                    pause(pause_time);
-                    if self.get_left_distance(false) >= self.config.Nav_Config.Distance_Cutoff_Threshold
-                        pause(pause_time);
-                        self.pivot_left_90()
-                        pause(pause_time);
-                        self.move_in_cm(self.config.Nav_Config.Distance_From_Wall*2)
-                        pause(pause_time);
+                if path_left_clear && path_right_clear
+                    %find the longer path and move there
+                    left_dist = self.get_left_distance();
+                    right_dist = self.get_right_distance();
+                    if left_dist < right_dist
+                        self.rotate_right();
+                    else
+                        self.rotate_left();
                     end
-                    self.resetPID();
+                    continue;
                 end
 
+                if path_left_clear && ~path_right_clear
+                    self.rotate_left();
+                    continue;
+                end
+
+                if path_right_clear && ~path_left_clear
+                    self.rotate_right();
+                    continue;
+                end
+
+                if ~path_right_clear && ~path_left_clear
+                    self.turn_around();
+                end
             end
         end
 
+        function check_for_colors(self)
+            if self.is_on_color("red")
+                disp('Red\n')
+                self.brake();
+                pause(3);
+                self.move_in_cm(20);
+                self.wait_for_motors();
+            elseif ~self.saw_blue && self.is_on_color("blue")
+                disp('Blue\n')
+                self.saw_blue = true;
+                self.brake();
+                self.ev3Brick.beep();
+                pause(0.5);
+                self.ev3Brick.beep();
+            elseif ~self.saw_green && self.is_on_color("green")
+                disp('Green\n')
+                self.saw_green = true;
+                self.brake();
+                self.ev3Brick.beep();
+                pause(0.5);
+                self.ev3Brick.beep();
+                pause(0.5);
+                self.ev3Brick.beep();
+            elseif ~self.saw_yellow && self.is_on_color("yellow")
+                disp('Yellow\n')
+                self.saw_yellow = true;
+                self.brake();
+                self.ev3Brick.beep();
+                pause(0.5);
+                self.ev3Brick.beep();
+                pause(0.5);
+                self.ev3Brick.beep();
+                pause(0.5);
+                self.ev3Brick.beep();
+            end
+        end
 
         function color_test(self)
             while true
-                pause(pause_time);
+                pause(0.5);
                 if self.is_on_color("Red")
                     disp("Red");
                 elseif self.is_on_color("Yellow")
